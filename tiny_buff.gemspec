@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.summary     = "want to have a small line-based text buffer with named marks and selections, very rudimentary editing, but absolutely nothing else? then this library is for you."
   s.authors     = ["Jeff Lunt"]
   s.email       = "jefflunt@gmail.com"
-  s.files       = ["lib/tiny_text_buffer.rb"]
+  s.files       = ["lib/tiny_buff.rb"]
   s.homepage    = "https://github.com/jefflunt/tiny_text_buffer"
   s.license     = "MIT"
 end
