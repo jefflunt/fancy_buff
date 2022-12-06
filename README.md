@@ -1,1 +1,1 @@
-see `lib/tiny_text_buffer.rb`
+see `lib/tiny_buff.rb`
