@@ -25,6 +25,15 @@ class TinyBuff
     !!max_len ? @content[line_range] : @content[line_range].map{|l| l[..max_len] }
   end
 
+  # col: starting column (zero-based)
+  # row: starting line (zero-based)
+  # wid: the number of characters per line
+  # hgt: the number of rows
+  def rect(col, row, wid, hgt)
+    @content[row..(row + hgt - 1)]
+      .map{|row| row.chomp.chars[col..(col + wid - 1)].join }
+  end
+
   # set a mark, as in the Vim sense
   #
   # sym: the name of the mark
