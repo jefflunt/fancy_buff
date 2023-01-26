@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "fancy_buff"
-  s.version     = "1.1.0"
+  s.version     = "2.0.0"
   s.description = "a text buffer with marks, selections, and simple insert/delete"
   s.summary     = "want to have a small line-based text buffer with named marks and selections, very rudimentary editing, but absolutely nothing else? then this library is for you."
   s.authors     = ["Jeff Lunt"]
