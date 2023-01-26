@@ -1,4 +1,4 @@
-see `lib/tiny_buff.rb`
+see `lib/fancy_buff.rb` for usage
 
 - add a cursor (not visual, but a char index)
 - inserts/deletes should move marks, possibly removing them in a delete
