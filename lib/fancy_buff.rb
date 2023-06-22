@@ -1,6 +1,8 @@
 # a text buffer with marks, selections, and rudimentary editing
-class TinyBuff
-  attr_reader :length
+class FancyBuff
+  attr_reader :length,
+              :marks,
+              :selections
 
   # content: the starting content of the buffer as a String
   def initialize(content='')
@@ -21,8 +23,8 @@ class TinyBuff
   # line_range: the Range of lines to return (NOT line indexes numbers)
   # max_len (optional): the maximum length of each line to return; useful when you want to
   #   return a rectangular region of text for display, for example
-  def [](line_range, max_len=nil)
-    !!max_len ? @content[line_range] : @content[line_range].map{|l| l[..max_len] }
+  def [](line_range)
+    @content[line_range]
   end
 
   # col: starting column (zero-based)
@@ -31,7 +33,7 @@ class TinyBuff
   # hgt: the number of rows
   def rect(col, row, wid, hgt)
     @content[row..(row + hgt - 1)]
-      .map{|row| row.chomp.chars[col..(col + wid - 1)].join }
+      .map{|row| row.chars[col..(col + wid - 1)].join }
   end
 
   # set a mark, as in the Vim sense
@@ -40,15 +42,26 @@ class TinyBuff
   # char_num: the number of characters from the top of the buffer to set the
   #   mark
   def mark(sym, char_num)
-    @marks[sym] = char_num
+    @marks[sym] = [length, char_num].min
 
     nil
   end
 
-  # selects a named range of characters 
+  # remote a mark by name
   #
-  # sym: the name of the range
-  # char_range: a Range representing the starting and ending byte of the
+  # sym: the name of the mark to remove
+  def unmark(sym)
+    @marks.delete(sym)
+    
+    nil
+  end
+
+  # selects a named range of characters. selections are used to highlight
+  # chunks of text that you can refer to later. by giving them a name it's like
+  # having a clipboard with multiple clips on it.
+  #
+  # sym: the name of the selection
+  # char_range: a Range representing the starting and ending char of the
   #   selection
   def select(sym, char_range)
     @selections[sym] = char_range
@@ -56,10 +69,24 @@ class TinyBuff
     nil
   end
 
-  # line: the line to insert
+  # deletes a named selection
+  #
+  # sym: the name of the selection
+  # char_range: a Range representing the starting and ending char of the
+  #   selection
+  def unselect(sym)
+    @selections.delete(sym)
+
+    nil
+  end
+
   # index: the index to insert it at (NOT the 1-based line number)
-  def insert_line(line, index)
-    @content.insert(line, index)
+  # line: the line to insert
+  #
+  # NOTE: if `index` is greater than the number of lines in content, then the
+  # line is simply appended to the end of the buffer
+  def insert_line(index, line)
+    @content.insert([lines, index].min, line)
     @length += line.length
   end
 

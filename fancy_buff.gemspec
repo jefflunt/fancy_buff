@@ -8,4 +8,6 @@ Gem::Specification.new do |s|
   s.files       = ["lib/fancy_buff.rb"]
   s.homepage    = "https://github.com/jefflunt/fancy_buff"
   s.license     = "MIT"
+
+  s.add_development_dependency 'minitest'
 end

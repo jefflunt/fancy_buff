@@ -1,0 +1,19 @@
+PATH
+  remote: .
+  specs:
+    fancy_buff (2.0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    minitest (5.18.1)
+
+PLATFORMS
+  x86_64-darwin-21
+
+DEPENDENCIES
+  fancy_buff!
+  minitest
+
+BUNDLED WITH
+   2.3.14

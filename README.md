@@ -1,5 +1,11 @@
 see `lib/fancy_buff.rb` for usage
 
+run the minitest specs:
+
+```shell
+$ bundle exec ruby -Ilib:test lib/**/*_test.rb
+```
+
 - add a cursor (not visual, but a char index)
 - inserts/deletes should move marks, possibly removing them in a delete
 - inserts/deletes should move selections, possibly removing some/all of them in a delete
