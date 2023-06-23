@@ -1,30 +1,67 @@
 # a text buffer with marks, selections, and rudimentary editing
 class FancyBuff
-  attr_reader :length,
+  attr_reader :chars,
+              :bytes,
+              :lines,
+              :length,
               :marks,
               :selections
 
-  # content: the starting content of the buffer as a String
-  def initialize(content='')
-    @content = content.lines.map(&:chomp)
+  attr_accessor :win
+
+  # gives you a default, empty, zero slice
+  def initialize
+    # size tracking
+    @chars = 0        # the number of characters in the buffer (not the same as the number of bytes)
+    @bytes = 0        # the number of bytes in the buffer (not the same as the number of characters)
+    @lines = []
+
     @marks = {}
     @selections = {}
-
-    @length = @content
-      .map{|l| l.length }
-      .sum
+    @win = [0, 0, 0, 0]    # the default slice is at the beginning of the buffer, and has a zero size
   end
 
-  # returns the number of lines
-  def lines
-    @content.length
+  def r
+    @win[0]
   end
 
-  # line_range: the Range of lines to return (NOT line indexes numbers)
-  # max_len (optional): the maximum length of each line to return; useful when you want to
-  #   return a rectangular region of text for display, for example
-  def [](line_range)
-    @content[line_range]
+  def c
+    @win[1]
+  end
+
+  def w
+    @win[2]
+  end
+
+  def h
+    @win[3]
+  end
+
+  # returns an array of strings representing the visible characters from this
+  # FancyBuffer's @rect
+  def win_s
+    r, c, w, h = @win
+
+    return [] if h == 0 || w == 0
+
+    @lines[r..([r + h - 1, 0].max)]
+      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(3)} #{row.chars[c..(c + w - 1 - 4)]&.join}" }
+  end
+
+  def win_up(n=1)
+    @win[0] = [@win[0] - n, 0].max
+  end
+
+  def win_down(n=1)
+    @win[0] = [@win[0] + n, @lines.length - @win[3]].min
+  end
+
+  def win_left(n=1)
+    @win[1] = [@win[1] - n, 0].max
+  end
+
+  def win_right(n=1)
+    @win[1] = [@win[1] + n, 100].min
   end
 
   # col: starting column (zero-based)
@@ -32,7 +69,7 @@ class FancyBuff
   # wid: the number of characters per line
   # hgt: the number of rows
   def rect(col, row, wid, hgt)
-    @content[row..(row + hgt - 1)]
+    @lines[row..(row + hgt - 1)]
       .map{|row| row.chars[col..(col + wid - 1)].join }
   end
 
@@ -42,7 +79,7 @@ class FancyBuff
   # char_num: the number of characters from the top of the buffer to set the
   #   mark
   def mark(sym, char_num)
-    @marks[sym] = [length, char_num].min
+    @marks[sym] = [@chars, char_num].min
 
     nil
   end
@@ -80,66 +117,39 @@ class FancyBuff
     nil
   end
 
-  # index: the index to insert it at (NOT the 1-based line number)
-  # line: the line to insert
-  #
-  # NOTE: if `index` is greater than the number of lines in content, then the
-  # line is simply appended to the end of the buffer
-  def insert_line(index, line)
-    @content.insert([lines, index].min, line)
-    @length += line.length
-  end
-
-  # str: the String to insert
-  # char_num: the char_num at which to start the insertion
-  def insert_text(str, char_num)
-    # TODO: this is tricky because if the string contains multiple lines then
-    # you're not just inserting in the middle of an existing line, you're
-    # inserting some text which may include multiple lines
-  end
-
-  # index: the indext of the line to delete (NOT the 1-based line number)
-  def delete_at(index)
-    @length -= @content[index].length
-    @content.delete_at(index)
-  end
-
-  # char_range: the range of characters to remove from this TinyBuff
-  def delete_range(char_range)
-    # TODO: this deletes the Range of characters, which may span multiple lines
-  end
-
   # line: the line to add to the end of the buffer
-  def push(line)
-    @content << line
-    @length += line.length
+  def <<(line)
+    line.chomp!
+    @lines << line
+    @bytes += line.length
+    @chars += line.chars.length
 
     nil
   end
-  alias << push
-
-  # deletes and returns the last line of this buffer
-  def pop
-    @length -= (@content.pop).length
-
-    nil
-  end
-
-  # line: the line to be added to the beginning of the buffer
-  def unshift(line)
-    @content.unshift(line)
-    @length += line.length
-
-    nil
-  end
-  alias >> unshift
-
-  # deletes and returns the first line of the buffer
-  def shift
-    @length -= (@content.shift).length
-  end
-
-  def to_s
-    @content.join("\n")
-  end
+#
+#  # deletes and returns the last line of this buffer
+#  def pop
+#    l = @lines.pop
+#    @bytes -= l.length
+#    @chars -= l.chars.length
+#
+#    nil
+#  end
+#
+#  # line: the line to be added to the beginning of the buffer
+#  def unshift(line)
+#    @lines.unshift(line)
+#    @bytes += line.length
+#    @chars += line.chars.length
+#
+#    nil
+#  end
+#  alias >> unshift
+#
+#  # deletes and returns the first line of the buffer
+#  def shift
+#    l = @lines.shift
+#    @bytes -= l.length
+#    @chars -= l.chars.length
+#  end
 end

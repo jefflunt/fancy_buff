@@ -4,19 +4,8 @@ require_relative './fancy_buff'
 class TestFancyBuff < Minitest::Test
   def setup
     @content = "line 1\nline 2\nline 3"
-    @buff = FancyBuff.new(@content)
-  end
-
-  def test_length
-    assert_equal 18, @buff.length
-  end
-
-  def test_lines
-    assert_equal 3, @buff.lines
-  end
-
-  def test_range
-    assert_equal ['line 2', 'line 3'], @buff[1..2]
+    @buff = FancyBuff.new
+    @content.lines.each{|l| @buff << l }
   end
 
   def test_rect
@@ -60,15 +49,5 @@ class TestFancyBuff < Minitest::Test
 
     @buff.unselect(:sel2)
     assert_equal({}, @buff.selections)
-  end
-
-  def test_insert_line
-    assert_equal ['line 1', 'line 2', 'line 3'], @buff[0..5]
-
-    @buff.insert_line(1, 'line X')
-    assert_equal ['line 1', 'line X', 'line 2', 'line 3'], @buff[0..5]
-
-    @buff.insert_line(99, 'line Y')
-    assert_equal ['line 1', 'line X', 'line 2', 'line 3', 'line Y'], @buff[0..5]
   end
 end
