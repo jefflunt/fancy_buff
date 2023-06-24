@@ -4,9 +4,12 @@ class FancyBuff
               :bytes,
               :lines,
               :length,
+              :max_char_width,
               :marks,
               :selections
 
+  # allows the consuming application to set the window size, since that
+  # application is probably mananging the other buffers in use
   attr_accessor :win
 
   # gives you a default, empty, zero slice
@@ -15,24 +18,29 @@ class FancyBuff
     @chars = 0        # the number of characters in the buffer (not the same as the number of bytes)
     @bytes = 0        # the number of bytes in the buffer (not the same as the number of characters)
     @lines = []
+    @max_char_width = 0
 
     @marks = {}
     @selections = {}
     @win = [0, 0, 0, 0]    # the default slice is at the beginning of the buffer, and has a zero size
   end
 
+  # index of first visible row
   def r
     @win[0]
   end
 
+  # index of first visible column
   def c
     @win[1]
   end
 
+  # width of the buffer window
   def w
     @win[2]
   end
 
+  # height of the buffer window
   def h
     @win[3]
   end
@@ -44,33 +52,39 @@ class FancyBuff
 
     return [] if h == 0 || w == 0
 
-    @lines[r..([r + h - 1, 0].max)]
-      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(3)} #{row.chars[c..(c + w - 1 - 4)]&.join}" }
+    @lines[r..(r + visible_lines - 1)]
+      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(3)} #{row.chars[c..(c + w - 1 - 4)]&.join}\e[0K" } +
+      Array.new(blank_lines) { "\e[0K" }
   end
 
+  # the number of visible lines from @lines at any given time
+  def visible_lines
+    [h, @lines.length - r].min
+  end
+
+  # the number of blank lines in the buffer after showing all visible lines
+  def blank_lines
+    [@win[3] - visible_lines, 0].max
+  end
+
+  # scrolls the visible window up
   def win_up(n=1)
     @win[0] = [@win[0] - n, 0].max
   end
 
+  # scrolls the visible window down
   def win_down(n=1)
-    @win[0] = [@win[0] + n, @lines.length - @win[3]].min
+    @win[0] = [@win[0] + n, @lines.length - 1].min
   end
 
+  # scrolls the visible window left
   def win_left(n=1)
     @win[1] = [@win[1] - n, 0].max
   end
 
+  # scrolls the visible window right
   def win_right(n=1)
-    @win[1] = [@win[1] + n, 100].min
-  end
-
-  # col: starting column (zero-based)
-  # row: starting line (zero-based)
-  # wid: the number of characters per line
-  # hgt: the number of rows
-  def rect(col, row, wid, hgt)
-    @lines[row..(row + hgt - 1)]
-      .map{|row| row.chars[col..(col + wid - 1)].join }
+    @win[1] = [@win[1] + n, max_char_width - 1].min
   end
 
   # set a mark, as in the Vim sense
@@ -123,6 +137,7 @@ class FancyBuff
     @lines << line
     @bytes += line.length
     @chars += line.chars.length
+    @max_char_width = line.chars.length if line.chars.length > @max_char_width
 
     nil
   end

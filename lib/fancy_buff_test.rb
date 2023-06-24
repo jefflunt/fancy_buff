@@ -6,10 +6,87 @@ class TestFancyBuff < Minitest::Test
     @content = "line 1\nline 2\nline 3"
     @buff = FancyBuff.new
     @content.lines.each{|l| @buff << l }
+    @buff.win = [0, 0, 5, 6]
   end
 
-  def test_rect
-    assert_equal ['e 1', 'e 2', 'e 3'], @buff.rect(3, 0, 3, 3)
+  def test_rcwh_and_scroll
+    assert_equal 0, @buff.r
+    assert_equal 0, @buff.c
+    assert_equal 5, @buff.w
+    assert_equal 6, @buff.h
+
+    assert_equal 0, @buff.r
+    assert_equal 0, @buff.c
+    assert_equal 5, @buff.w
+    assert_equal 6, @buff.h
+
+    @buff.win_down
+
+#    assert_equal 1, @buff.r
+#    assert_equal 0, @buff.c
+#    assert_equal 5, @buff.w
+#    assert_equal 6, @buff.h
+#
+#    @buff.win_down
+#
+#    assert_equal 2, @buff.r
+#    assert_equal 0, @buff.c
+#    assert_equal 5, @buff.w
+#    assert_equal 6, @buff.h
+  end
+
+  def test_visible_lines
+    assert_equal 3, @buff.visible_lines
+
+    @buff.win_down
+    assert_equal 2, @buff.visible_lines
+
+    @buff.win_down
+    assert_equal 1, @buff.visible_lines
+
+    @buff.win_down  # cannot scroll past the last line
+    assert_equal 1, @buff.visible_lines
+
+    @buff.win = [0, 0, @buff.w, 1]
+    assert_equal 1, @buff.visible_lines
+
+    @buff.win_down
+    assert_equal 1, @buff.visible_lines
+
+    @buff.win_down
+    assert_equal 1, @buff.visible_lines
+
+    @buff.win_down  # cannot scroll past the last line
+    assert_equal 1, @buff.visible_lines
+  end
+
+  def test_blank_lines
+    assert_equal 3, @buff.blank_lines
+
+    @buff.win_down
+    assert_equal 4, @buff.blank_lines
+
+    @buff.win_down
+    assert_equal 5, @buff.blank_lines
+
+    @buff.win_down # cannot scroll past the last line
+    assert_equal 5, @buff.blank_lines
+
+    @buff.win = [0, 0, @buff.w, 1]
+    assert_equal 0, @buff.r
+    assert_equal 0, @buff.blank_lines
+
+    @buff.win_down
+    assert_equal 1, @buff.r
+    assert_equal 0, @buff.blank_lines
+
+    @buff.win_down
+    assert_equal 2, @buff.r
+    assert_equal 0, @buff.blank_lines
+
+    @buff.win_down # cannot scroll past the last line
+    assert_equal 2, @buff.r
+    assert_equal 0, @buff.blank_lines
   end
 
   def test_mark_and_unmark
