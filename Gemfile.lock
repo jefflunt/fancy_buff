@@ -15,7 +15,7 @@ PLATFORMS
 
 DEPENDENCIES
   fancy_buff!
-  minitest
+  minitest (~> 5.18)
 
 BUNDLED WITH
    2.3.14

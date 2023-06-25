@@ -40,35 +40,7 @@ class FancyBuff
   def win=(coords)
     @win = coords
 
-    reset_caret!
-  end
-
-  def reset_caret!
-    cx, cy = @caret
-    new_cx = if cx < c
-               c
-             elsif cx > c + w
-               w
-             else
-               cx
-             end
-
-    new_cy = if cy < r
-               r
-             elsif cy > (r + h - 1)
-               r + h - 1
-             else
-               cy
-             end
-
-    @caret = [new_cx, new_cy]
-  end
-
-  def visual_caret
-    [
-      caret[0] - c + line_no_width + 1, # '+ 1' is to account for a space between line numbers and caret
-      caret[1] - r
-    ]
+    adjust_caret!
   end
 
   # index of first visible column
@@ -91,6 +63,77 @@ class FancyBuff
     @win[3]
   end
 
+  def adjust_caret!
+    cx, cy = @caret
+    new_cx = if cx < c
+               c
+             elsif cx > c + w
+               w
+             else
+               cx
+             end
+
+    new_cy = if cy < r
+               r
+             elsif cy > (r + h - 1)
+               r + h - 1
+             else
+               cy
+             end
+
+    @caret = [new_cx, new_cy]
+  end
+
+  def adjust_win!
+    cx, cy = visual_caret
+    wx, wy = @win[0], @win[1]
+
+    new_wx = if cx > (c + w - 1)
+               wx + 1
+             elsif cx < 0
+               wx - 1
+             else
+               wx
+             end
+
+    new_wy = if cy > (r + h - 1)
+               wy + 1
+             elsif cy < 0
+               wy - 1
+             else
+               wy
+             end
+
+    @win[0] = wx
+    @win[1] = wy
+  end
+
+  def caret_down!
+    @caret[1] = [caret[1] + 1, @lines.length - 1].min
+    adjust_win!
+  end
+
+  def caret_up!
+    @caret[1] = [caret[1] - 1, 0].max
+    adjust_win!
+  end
+
+  def caret_left!
+    @caret[0] = [caret[0] - 1, 0].max
+    adjust_win!
+  end
+
+  def caret_right!
+    @caret[0] = [caret[0] + 1, @lines[caret[1]].length - 1].min
+    adjust_win!
+  end
+
+  def visual_caret
+    [
+      caret[0] - c + line_no_width + 1, # '+ 1' is to account for a space between line numbers and caret
+      caret[1] - r
+    ]
+  end
   # returns an array of strings representing the visible characters from this
   # FancyBuffer's @rect
   def win_s
@@ -155,25 +198,25 @@ class FancyBuff
   # scrolls the visible window up
   def win_up!(n=1)
     @win[1] = [@win[1] - n, 0].max
-    reset_caret!
+    adjust_caret!
   end
 
   # scrolls the visible window down
   def win_down!(n=1)
     @win[1] = [@win[1] + n, @lines.length - 1].min
-    reset_caret!
+    adjust_caret!
   end
 
   # scrolls the visible window left
   def win_left!(n=1)
     @win[0] = [@win[0] - n, 0].max
-    reset_caret!
+    adjust_caret!
   end
 
   # scrolls the visible window right
   def win_right!(n=1)
     @win[0] = [@win[0] + n, max_char_width - 1].min
-    reset_caret!
+    adjust_caret!
   end
 
   # set a mark, as in the Vim sense
