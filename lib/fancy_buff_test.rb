@@ -68,6 +68,7 @@ class TestFancyBuff < Minitest::Test
     # adjusted for the line number display
     assert_equal [0, 0, 5, 6], @buff.win
     assert_equal [0, 0], @buff.caret
+    assert_equal [2, 0], @buff.visual_caret
 
     # when the window moves to a place where the visual caret is no longer in
     # the window, the visual caret moves with the top-left corner of the
@@ -75,21 +76,45 @@ class TestFancyBuff < Minitest::Test
     @buff.win_down!
     assert_equal [0, 1, 5, 6], @buff.win
     assert_equal [0, 1], @buff.caret
+    assert_equal [2, 0], @buff.visual_caret
+
+    @buff.win_down!
+    assert_equal [0, 2, 5, 6], @buff.win
+    assert_equal [0, 2], @buff.caret
+    assert_equal [2, 0], @buff.visual_caret
 
     # this reset of the visual caret applies across multiple moves
     @buff.win_right!
-    assert_equal [1, 1, 5, 6], @buff.win
-    assert_equal [1, 1], @buff.caret
+    assert_equal [1, 2, 5, 6], @buff.win
+    assert_equal [1, 2], @buff.caret
+    assert_equal [2, 0], @buff.visual_caret
+
+    @buff.win_right!
+    assert_equal [2, 2, 5, 6], @buff.win
+    assert_equal [2, 2], @buff.caret
+    assert_equal [2, 0], @buff.visual_caret
 
     # when the caret position doesn't need to be updated, but the window moves,
     # then the visual caret location may move with it
     @buff.win_up!
+    assert_equal [2, 1, 5, 6], @buff.win
+    assert_equal [2, 2], @buff.caret
+    assert_equal [2, 1], @buff.visual_caret
+
+    @buff.win_up!
+    assert_equal [2, 0, 5, 6], @buff.win
+    assert_equal [2, 2], @buff.caret
+    assert_equal [2, 2], @buff.visual_caret
+
+    @buff.win_left!
     assert_equal [1, 0, 5, 6], @buff.win
-    assert_equal [1, 1], @buff.caret
+    assert_equal [2, 2], @buff.caret
+    assert_equal [3, 2], @buff.visual_caret
 
     @buff.win_left!
     assert_equal [0, 0, 5, 6], @buff.win
-    assert_equal [1, 1], @buff.caret
+    assert_equal [2, 2], @buff.caret
+    assert_equal [4, 2], @buff.visual_caret
   end
 
   def test_visual_caret_with_manual_wins_adjust

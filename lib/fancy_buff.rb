@@ -44,7 +44,7 @@ class FancyBuff
   end
 
   def reset_caret!
-    cy, cx = @caret
+    cx, cy = @caret
     new_cx = if cx < c
                c
              elsif cx > c + w
@@ -55,8 +55,8 @@ class FancyBuff
 
     new_cy = if cy < r
                r
-             elsif cy > r + h
-               h
+             elsif cy > (r + h - 1)
+               r + h - 1
              else
                cy
              end

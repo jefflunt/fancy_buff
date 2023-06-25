@@ -11,5 +11,5 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'rouge', '~> 4.1'
 
-  s.add_development_dependency 'minitest'
+  s.add_development_dependency 'minitest', '~> 5.18'
 end
