@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fancy_buff (2.3.0)
+    fancy_buff (2.5.0)
       rouge (~> 4.1)
 
 GEM

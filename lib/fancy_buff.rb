@@ -4,13 +4,12 @@ class FancyBuff
               :bytes,
               :lines,
               :length,
+              :line_no_width,
               :max_char_width,
+              :win,
+              :caret,
               :marks,
               :selections
-
-  # allows the consuming application to set the window size, since that
-  # application is probably mananging the other buffers in use
-  attr_accessor :win
 
   # gives you a default, empty, zero slice
   #
@@ -19,11 +18,14 @@ class FancyBuff
   def initialize(formatter, lexer)
     @formatter = formatter
     @lexer = lexer
+    @win = [0, 0, 0, 0]    # the default slice is at the beginning of the buffer, and has a zero size
+    @caret = [c, r]
 
     # size tracking
     @chars = 0        # the number of characters in the buffer (not the same as the number of bytes)
     @bytes = 0        # the number of bytes in the buffer (not the same as the number of characters)
     @lines = []
+    @line_no_width = 1
     @rendered_lines = [] # fully formatted, syntax highlighted, and transformed
     @edited_since_last_render = true
     @max_char_width = 0
@@ -31,16 +33,51 @@ class FancyBuff
 
     @marks = {}
     @selections = {}
-    @win = [0, 0, 0, 0]    # the default slice is at the beginning of the buffer, and has a zero size
   end
 
-  # index of first visible row
-  def r
-    @win[0]
+  # move the window coordinates, and possibly the caret as well, if moving the
+  # window would cause the caret to be out-of-bounds
+  def win=(coords)
+    @win = coords
+
+    reset_caret!
+  end
+
+  def reset_caret!
+    cy, cx = @caret
+    new_cx = if cx < c
+               c
+             elsif cx > c + w
+               w
+             else
+               cx
+             end
+
+    new_cy = if cy < r
+               r
+             elsif cy > r + h
+               h
+             else
+               cy
+             end
+
+    @caret = [new_cx, new_cy]
+  end
+
+  def visual_caret
+    [
+      caret[0] - c + line_no_width + 1, # '+ 1' is to account for a space between line numbers and caret
+      caret[1] - r
+    ]
   end
 
   # index of first visible column
   def c
+    @win[0]
+  end
+
+  # index of first visible row
+  def r
     @win[1]
   end
 
@@ -57,11 +94,9 @@ class FancyBuff
   # returns an array of strings representing the visible characters from this
   # FancyBuffer's @rect
   def win_s
-    r, c, w, h = @win
-
     return [] if h == 0 || w == 0
 
-    line_no_width = @lines.length.to_s.length
+    @line_no_width = @lines.length.to_s.length
     if @edited_since_last_render
       @rendered_lines = @formatter
         .format(@lexer.lex(@lines.join("\n")))
@@ -74,7 +109,7 @@ class FancyBuff
     end
 
     @rendered_lines[r..(r + visible_lines - 1)]
-      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(line_no_width)} #{substr_with_color(row, c,  c + w - line_no_width - 2)}" }
+      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(@line_no_width)} #{substr_with_color(row, c,  c + w - @line_no_width - 2)}" }
       .map{|l| "#{l}\e[0K" } +
       Array.new(blank_lines) { "\e[0K" }
   end
@@ -118,23 +153,27 @@ class FancyBuff
   end
 
   # scrolls the visible window up
-  def win_up(n=1)
-    @win[0] = [@win[0] - n, 0].max
+  def win_up!(n=1)
+    @win[1] = [@win[1] - n, 0].max
+    reset_caret!
   end
 
   # scrolls the visible window down
-  def win_down(n=1)
-    @win[0] = [@win[0] + n, @lines.length - 1].min
+  def win_down!(n=1)
+    @win[1] = [@win[1] + n, @lines.length - 1].min
+    reset_caret!
   end
 
   # scrolls the visible window left
-  def win_left(n=1)
-    @win[1] = [@win[1] - n, 0].max
+  def win_left!(n=1)
+    @win[0] = [@win[0] - n, 0].max
+    reset_caret!
   end
 
   # scrolls the visible window right
-  def win_right(n=1)
-    @win[1] = [@win[1] + n, max_char_width - 1].min
+  def win_right!(n=1)
+    @win[0] = [@win[0] + n, max_char_width - 1].min
+    reset_caret!
   end
 
   # set a mark, as in the Vim sense
