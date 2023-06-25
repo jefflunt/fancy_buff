@@ -59,12 +59,41 @@ class FancyBuff
 
     return [] if h == 0 || w == 0
 
+    line_no_width = @lines.length.to_s.length
     text = @formatter
       .format(@lexer.lex(@lines.join("\n")))
       .lines[r..(r + visible_lines - 1)]
-      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(3)} #{row.chars[c..(c + w - 1 - 4)]&.join}" }
+      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(line_no_width)} #{substr_with_color(row, c,  c + w - line_no_width - 2)}" }
       .map{|l| l.chomp + "\e[0K" } +
       Array.new(blank_lines) { "\e[0K" }
+  end
+
+  # input - a String that may or may not contain ANSI color codes
+  # start - the starting index of printable characters to keep
+  # finish - the ending index of printable characters to keep
+  #
+  # treats `input' like a String that does
+  def substr_with_color(input, start, finish)
+    ansi_pattern = /\A\e\[[0-9;]+m/
+    printable_counter = 0
+    remaining = input.clone.chomp
+    result = ''
+
+    loop do
+      break if remaining.empty? || printable_counter > finish
+
+      match = remaining.match(ansi_pattern)
+      if match
+        result += match[0]
+        remaining = remaining.sub(match[0], '')
+      else
+        result += remaining[0] if printable_counter >= start
+        remaining = remaining[1..-1]
+        printable_counter += 1
+      end
+    end
+
+    result + "\e[0m"
   end
 
   # the number of visible lines from @lines at any given time

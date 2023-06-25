@@ -25,17 +25,26 @@ class TestFancyBuff < Minitest::Test
 
     @buff.win_down
 
-#    assert_equal 1, @buff.r
-#    assert_equal 0, @buff.c
-#    assert_equal 5, @buff.w
-#    assert_equal 6, @buff.h
-#
-#    @buff.win_down
-#
-#    assert_equal 2, @buff.r
-#    assert_equal 0, @buff.c
-#    assert_equal 5, @buff.w
-#    assert_equal 6, @buff.h
+    assert_equal 1, @buff.r
+    assert_equal 0, @buff.c
+    assert_equal 5, @buff.w
+    assert_equal 6, @buff.h
+
+    @buff.win_down
+
+    assert_equal 2, @buff.r
+    assert_equal 0, @buff.c
+    assert_equal 5, @buff.w
+    assert_equal 6, @buff.h
+  end
+
+  def test_substr_with_color
+    input = "\e[31mHello \e[32mWorld\e[0m!\n"
+    #                              1     11   indexes of printable characters
+    #              012345      67890     12
+    assert_equal "\e[31m\e[32morld\e[0m", @buff.substr_with_color(input, 7, 10)
+    assert_equal "\e[31mlo \e[32mW\e[0m", @buff.substr_with_color(input, 3, 6)
+    assert_equal "\e[31m\e[32morld\e[0m!\e[0m", @buff.substr_with_color(input, 7, 99)
   end
 
   def test_visible_lines
