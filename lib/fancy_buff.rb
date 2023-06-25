@@ -24,6 +24,8 @@ class FancyBuff
     @chars = 0        # the number of characters in the buffer (not the same as the number of bytes)
     @bytes = 0        # the number of bytes in the buffer (not the same as the number of characters)
     @lines = []
+    @rendered_lines = [] # fully formatted, syntax highlighted, and transformed
+    @edited_since_last_render = true
     @max_char_width = 0
     @all_buff = @lines.join("\n")
 
@@ -60,11 +62,20 @@ class FancyBuff
     return [] if h == 0 || w == 0
 
     line_no_width = @lines.length.to_s.length
-    text = @formatter
-      .format(@lexer.lex(@lines.join("\n")))
-      .lines[r..(r + visible_lines - 1)]
+    if @edited_since_last_render
+      @rendered_lines = @formatter
+        .format(@lexer.lex(@lines.join("\n")))
+        .lines
+        .map(&:chomp)
+
+      @edited_since_last_render = false
+    else
+      @rendered_lines[r..(r + visible_lines - 1)]
+    end
+
+    @rendered_lines[r..(r + visible_lines - 1)]
       .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(line_no_width)} #{substr_with_color(row, c,  c + w - line_no_width - 2)}" }
-      .map{|l| l.chomp + "\e[0K" } +
+      .map{|l| "#{l}\e[0K" } +
       Array.new(blank_lines) { "\e[0K" }
   end
 
@@ -178,6 +189,7 @@ class FancyBuff
     @chars += line.chars.length
     @max_char_width = line.chars.length if line.chars.length > @max_char_width
 
+    @edited_since_last_render = true
     nil
   end
 #
