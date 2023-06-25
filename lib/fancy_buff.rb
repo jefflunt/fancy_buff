@@ -13,12 +13,19 @@ class FancyBuff
   attr_accessor :win
 
   # gives you a default, empty, zero slice
-  def initialize
+  #
+  # formatter - a Rouge formatter
+  # lexer - a Rouge lexer
+  def initialize(formatter, lexer)
+    @formatter = formatter
+    @lexer = lexer
+
     # size tracking
     @chars = 0        # the number of characters in the buffer (not the same as the number of bytes)
     @bytes = 0        # the number of bytes in the buffer (not the same as the number of characters)
     @lines = []
     @max_char_width = 0
+    @all_buff = @lines.join("\n")
 
     @marks = {}
     @selections = {}
@@ -52,8 +59,11 @@ class FancyBuff
 
     return [] if h == 0 || w == 0
 
-    @lines[r..(r + visible_lines - 1)]
-      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(3)} #{row.chars[c..(c + w - 1 - 4)]&.join}\e[0K" } +
+    text = @formatter
+      .format(@lexer.lex(@lines.join("\n")))
+      .lines[r..(r + visible_lines - 1)]
+      .map.with_index{|row, i| "#{(i + r + 1).to_s.rjust(3)} #{row.chars[c..(c + w - 1 - 4)]&.join}" }
+      .map{|l| l.chomp + "\e[0K" } +
       Array.new(blank_lines) { "\e[0K" }
   end
 
