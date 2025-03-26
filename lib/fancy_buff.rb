@@ -196,25 +196,25 @@ class FancyBuff
   end
 
   # scrolls the visible window up
-  def win_up!(n=1)
+  def buff_up!(n=1)
     @win[1] = [@win[1] - n, 0].max
     adjust_caret!
   end
 
   # scrolls the visible window down
-  def win_down!(n=1)
+  def buff_down!(n=1)
     @win[1] = [@win[1] + n, @lines.length - 1].min
     adjust_caret!
   end
 
   # scrolls the visible window left
-  def win_left!(n=1)
+  def buff_left!(n=1)
     @win[0] = [@win[0] - n, 0].max
     adjust_caret!
   end
 
   # scrolls the visible window right
-  def win_right!(n=1)
+  def buff_right!(n=1)
     @win[0] = [@win[0] + n, max_char_width - 1].min
     adjust_caret!
   end
